@@ -1,0 +1,33 @@
+# 忽略 Keil MDK 生成的文件和目录
+MDK-ARM/Objects/
+MDK-ARM/Listings/
+*.uvguix.*
+*.crf
+*.d
+*.o
+*.lst
+*.axf
+*.lnp
+*.dep
+*.iex
+*.htm
+*.sct
+*.map
+
+# 忽略构建输出目录 (如果Keil项目设置到了其他地方)
+Build/
+Debug/
+Release/
+
+# 忽略操作系统生成的文件
+.DS_Store
+Thumbs.db
+
+# 忽略IDE或编辑器临时文件
+*.swp
+*.swo
+*~
+
+# 忽略用户特定的Keil工作区文件 (包含窗口布局等)
+*.uvoptx
+# 注意： *.uvprojx 是项目文件，非常重要，必须保留，所以不要忽略它！
