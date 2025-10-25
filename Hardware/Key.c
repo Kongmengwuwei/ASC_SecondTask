@@ -16,42 +16,16 @@ void Key_Init(void)
 	
 	GPIO_InitTypeDef GPIO_InitStructure;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_11;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
-	
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_15;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
 }
 
 uint8_t Key_GetState(uint8_t n)
 {
 	if (n == KEY_1)
 	{
-		if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == 0)
-		{
-			return KEY_PRESSED;
-		}
-	}
-	else if (n == KEY_2)
-	{
-		if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_11) == 0)
-		{
-			return KEY_PRESSED;
-		}
-	}
-	else if (n == KEY_3)
-	{
-		if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13) == 1)
-		{
-			return KEY_PRESSED;
-		}
-	}
-	else if (n == KEY_4)
-	{
-		if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15) == 1)
+		if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0) == 0)
 		{
 			return KEY_PRESSED;
 		}
