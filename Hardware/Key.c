@@ -4,7 +4,7 @@
 #define KEY_PRESSED				1
 #define KEY_UNPRESSED			0
 
-#define KEY_TIME_DOUBLE			200
+#define KEY_TIME_DOUBLE			0
 #define KEY_TIME_LONG			2000
 #define KEY_TIME_REPEAT			100
 
@@ -12,7 +12,7 @@ uint8_t Key_Flag[KEY_COUNT];
 
 void Key_Init(void)
 {
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 	
 	GPIO_InitTypeDef GPIO_InitStructure;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;

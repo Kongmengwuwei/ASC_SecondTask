@@ -6,7 +6,7 @@ void PWM_Init(void){
 	
 	GPIO_InitTypeDef GPIO_InitStructure;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_3;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);		
 
@@ -27,13 +27,19 @@ void PWM_Init(void){
 	TIM_OCInitStructure.TIM_OutputState=TIM_OutputState_Enable;
 	TIM_OCInitStructure.TIM_Pulse=0;                      //CCR
 	TIM_OC3Init(TIM2,&TIM_OCInitStructure);
+	TIM_OC4Init(TIM2,&TIM_OCInitStructure);
 	
 	TIM_Cmd(TIM2,ENABLE);
-	
 }
 
 void PWM_SetCompare3(uint8_t Compare){
 	
 	TIM_SetCompare3(TIM2,Compare);
+	
+}
+
+void PWM_SetCompare4(uint8_t Compare){
+	
+	TIM_SetCompare4(TIM2,Compare);
 	
 }

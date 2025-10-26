@@ -8,11 +8,10 @@
 #include "Serial.h"
 #include <string.h>
 
-int16_t Speed;
-int8_t PWM;
+uint8_t mode=0;
 
 float Target,Actual,Out;
-float Kp=0.1,Ki=0.2,Kd=0.05;
+float Kp=0.3,Ki=0.2,Kd=0.01;
 float Error0,Error1,Error2;
 
 int main(void)
@@ -26,6 +25,12 @@ int main(void)
 	
 	while (1)
 	{
+		
+		if(Key_Check(KEY_1,KEY_SINGLE)){
+			mode=(mode==1)?0:1;
+		}
+		// 功能一电机控速
+		if(mode==0){
 		//读取上位机输入
 		if(Serial_GetRxFlag()==1){
 			if (strstr(Serial_RxPacket, "speed%") != NULL) {
@@ -37,14 +42,19 @@ int main(void)
 				Serial_SendString("ERROR_COMMAND\r\n");
 			}
 		}
-		
-		OLED_ShowSignedNum(1,1,Target,5);
-		OLED_ShowSignedNum(2,1,Actual,5);
-		OLED_ShowSignedNum(3,1,Out,5);
+		OLED_ShowString(1,1,"Mode 1");
 		
 		//输出波形图
 		Serial_Printf("%f,%f,%f\n",Target,Actual,Out);
 	}
+		
+	//功能二主从电机
+	if (mode==1){
+		Motor1_SetPWM(0);
+		
+		OLED_ShowString(1,1,"Mode 2");
+	}
+}
 }
 
 void TIM1_UP_IRQHandler(void){
@@ -56,11 +66,12 @@ void TIM1_UP_IRQHandler(void){
 		Key_Tick();
 		
 		Count++;
-		if(Count>=40)
+		if(Count>=30)
 		{
 			//增量式PID控制
 			Count=0;
-			Actual=Encoder_Get();
+			Actual=Encoder1_Get();
+			
 			
 			Error2=Error1;
 			Error1=Error0;
@@ -73,7 +84,8 @@ void TIM1_UP_IRQHandler(void){
 			if(Out>100)Out=100;
 			if(Out<-100)Out=-100;
 			
-			Motor_SetPWM(Out);
+			Motor1_SetPWM(Out);
+		    Motor2_SetPWM(Out);	
 		}
 		
 		TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
