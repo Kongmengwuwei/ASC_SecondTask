@@ -7,6 +7,13 @@
 #include "Encoder.h"
 #include "Serial.h"
 
+int16_t Speed;
+int8_t PWM;
+
+float Target,Actual,Out;
+float Kp=0.2,Ki=0.2,Kd=0;
+float Error0,Error1,ErrorInt;
+
 int main(void)
 { 
 	OLED_Init();
@@ -18,7 +25,13 @@ int main(void)
 	
 	while (1)
 	{
-		
+		if(Serial_GetRxFlag()==1){
+			Target=Serial_GetRxData();
+			Serial_SendByte(Target);
+		}
+		OLED_ShowNum(1,1,Target,5);
+		OLED_ShowNum(2,1,Actual,5);
+		OLED_ShowNum(3,1,Out,5);
 	}
 }
 
@@ -34,8 +47,19 @@ void TIM1_UP_IRQHandler(void){
 		if(Count>=40)
 		{
 			Count=0;
+			Actual=Encoder_Get();
 			
+			Error1=Error0;
+			Error0=Target-Actual;
+		
+			ErrorInt+=Error0;
 			
+			Out=Kp*Error0+Ki*ErrorInt+Kd*(Error0-Error1);
+			
+			if(Out>100)Out=100;
+			if(Out<-100)Out=-100;
+			
+			Motor_SetPWM(Out);
 		}
 		
 		TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
