@@ -10,9 +10,13 @@
 
 uint8_t mode=0;
 
-float Target,Actual,Out;
-float Kp=0.3,Ki=0.2,Kd=0.01;
-float Error0,Error1,Error2;
+float Mode1_Target,Mode1_Actual,Mode1_Out;
+float Mode1_Kp=0.3,Mode1_Ki=0.2,Mode1_Kd=0.01;
+float Mode1_Error0,Mode1_Error1,Mode1_Error2;
+
+float Mode2_Target,Mode2_Actual,Mode2_Out;
+float Mode2_Kp=0.4,Mode2_Ki=0,Mode2_Kd=0;
+float Mode2_Error0,Mode2_Error1,Mode2_Error2;;
 
 int main(void)
 { 
@@ -31,30 +35,34 @@ int main(void)
 		}
 		// 功能一电机控速
 		if(mode==0){
-		//读取上位机输入
-		if(Serial_GetRxFlag()==1){
-			if (strstr(Serial_RxPacket, "speed%") != NULL) {
-				
-				sscanf(Serial_RxPacket, "speed%%%f", &Target);
-				
-				Serial_Printf("Set_Speed:%d\r\n",(int)Target);
-			} else {
-				Serial_SendString("ERROR_COMMAND\r\n");
+			Motor2_SetPWM(0);
+			//读取上位机输入为目标
+			if(Serial_GetRxFlag()==1){
+				if (strstr(Serial_RxPacket, "speed%") != NULL) {
+					
+					sscanf(Serial_RxPacket, "speed%%%f", &Mode1_Target);
+					
+					Serial_Printf("Set_Speed:%d\r\n",(int)Mode1_Target);
+				} else {
+					Serial_SendString("ERROR_COMMAND\r\n");
+				}
 			}
+			OLED_ShowString(1,1,"Mode 1");
+			OLED_ShowString(2,1,"Speed Contral");
+		
+			Serial_Printf("%f,%f,%f\n",Mode1_Target,Mode1_Actual,Mode1_Out);
 		}
-		OLED_ShowString(1,1,"Mode 1");
+			
+		//功能二主从电机
+		if (mode==1){
+			Motor1_SetPWM(0);
 		
-		//输出波形图
-		Serial_Printf("%f,%f,%f\n",Target,Actual,Out);
+			OLED_ShowString(1,1,"Mode 2");
+			OLED_ShowString(2,1,"Fllowing Mode");
+		
+			Serial_Printf("%f,%f,%f\n",Mode2_Target,Mode2_Actual,Mode2_Out);
+		}
 	}
-		
-	//功能二主从电机
-	if (mode==1){
-		Motor1_SetPWM(0);
-		
-		OLED_ShowString(1,1,"Mode 2");
-	}
-}
 }
 
 void TIM1_UP_IRQHandler(void){
@@ -68,24 +76,44 @@ void TIM1_UP_IRQHandler(void){
 		Count++;
 		if(Count>=30)
 		{
-			//增量式PID控制
+			if(mode==0){
 			Count=0;
-			Actual=Encoder1_Get();
+			//增量式PID控制速度
+			Mode1_Actual=Encoder1_Get();
 			
+			Mode1_Error2=Mode1_Error1;
+			Mode1_Error1=Mode1_Error0;
+			Mode1_Error0=Mode1_Target-Mode1_Actual;
 			
-			Error2=Error1;
-			Error1=Error0;
-			Error0=Target-Actual;
+			Mode1_Out += Mode1_Kp * (Mode1_Error0-Mode1_Error1) +
+		    	         Mode1_Ki *  Mode1_Error0 +
+			             Mode1_Kd * (Mode1_Error0-2*Mode1_Error1+Mode1_Error2);
 			
-			Out += Kp * (Error0-Error1) +
-		    	   Ki *  Error0 +
-			       Kd * (Error0-2*Error1+Error2);
+			if(Mode1_Out>100)Mode1_Out=100;
+			if(Mode1_Out<-100)Mode1_Out=-100;
 			
-			if(Out>100)Out=100;
-			if(Out<-100)Out=-100;
+			Motor1_SetPWM(Mode1_Out);
+		}
+	}
+		if (mode==1){
+			Count=0;
+			//读取电机一位置为目标
+			Mode2_Target+=Encoder1_Get();
+			//增量式PID控制位置
+			Mode2_Actual+=Encoder2_Get();
 			
-			Motor1_SetPWM(Out);
-		    Motor2_SetPWM(Out);	
+			Mode2_Error2=Mode2_Error1;
+			Mode2_Error1=Mode2_Error0;
+			Mode2_Error0=Mode2_Target-Mode2_Actual;
+			
+			Mode2_Out += Mode2_Kp * (Mode2_Error0-Mode2_Error1) +
+		    	   Mode2_Ki *  Mode2_Error0 +
+			       Mode2_Kd * (Mode2_Error0-2*Mode2_Error1+Mode2_Error2);
+			
+			if(Mode2_Out>100)Mode2_Out=100;
+			if(Mode2_Out<-100)Mode2_Out=-100;
+			
+			Motor2_SetPWM(Mode2_Out);
 		}
 		
 		TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
