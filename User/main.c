@@ -11,7 +11,7 @@
 uint8_t mode=0;
 
 float Mode1_Target,Mode1_Actual,Mode1_Out;
-float Mode1_Kp=0.3,Mode1_Ki=0.2,Mode1_Kd=0.01;
+float Mode1_Kp=0.5,Mode1_Ki=0.16,Mode1_Kd=0.15;
 float Mode1_Error0,Mode1_Error1,Mode1_Error2;
 
 float Mode2_Target,Mode2_Actual,Mode2_Out;
@@ -35,6 +35,7 @@ int main(void)
 		}
 		// 功能一电机控速
 		if(mode==0){
+			Mode2_Out=0;
 			Motor2_SetPWM(0);
 			//读取上位机输入为目标
 			if(Serial_GetRxFlag()==1){
@@ -47,18 +48,23 @@ int main(void)
 					Serial_SendString("ERROR_COMMAND\r\n");
 				}
 			}
-			OLED_ShowString(1,1,"Mode 1");
+			OLED_ShowString(1,1,">Mode 1");
 			OLED_ShowString(2,1,"Speed Contral");
+			OLED_ShowString(3,1," Mode 2");
+			OLED_ShowString(4,1,"Fllow Position");
 		
 			Serial_Printf("%f,%f,%f\n",Mode1_Target,Mode1_Actual,Mode1_Out);
 		}
 			
 		//功能二主从电机
 		if (mode==1){
+			Mode1_Out=0;
 			Motor1_SetPWM(0);
 		
-			OLED_ShowString(1,1,"Mode 2");
-			OLED_ShowString(2,1,"Fllowing Mode");
+			OLED_ShowString(1,1," Mode 1");
+			OLED_ShowString(2,1,"Speed Contral");
+			OLED_ShowString(3,1,">Mode 2");
+			OLED_ShowString(4,1,"Fllow Position");
 		
 			Serial_Printf("%f,%f,%f\n",Mode2_Target,Mode2_Actual,Mode2_Out);
 		}
@@ -74,8 +80,9 @@ void TIM1_UP_IRQHandler(void){
 		Key_Tick();
 		
 		Count++;
-		if(Count>=30)
+		if(Count>=10)
 		{
+			// 功能一电机控速
 			if(mode==0){
 			Count=0;
 			//增量式PID控制速度
@@ -95,7 +102,9 @@ void TIM1_UP_IRQHandler(void){
 			Motor1_SetPWM(Mode1_Out);
 		}
 	}
+		//功能二主从电机
 		if (mode==1){
+			
 			Count=0;
 			//读取电机一位置为目标
 			Mode2_Target+=Encoder1_Get();
